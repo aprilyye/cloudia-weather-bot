@@ -10,20 +10,21 @@ const bot = new SlackBot({
 // found by listing users: bot.getUsers().then(arr => console.log(arr))
 const BOT_ID = 'ULGU042K1'
 
+let bonuslyUsers = {}
+
 bot.on('start', () => {
   // fetch users and add to Map
-  let users = {}
   fetch('https://bonus.ly/api/v1/users?access_token=ebd604cacd64f1296a27fa867a57ec3b')
   //fetch('https://bonus.ly/api/v1/bonuses?access_token=ebd604cacd64f1296a27fa867a57ec3b')
   .then(res => res.json())
   .then(res => {
-    users = res.result
     // console.log(users)
-    users.map(u => {
-      users[u.email] = u
+    res.result.forEach(u => {
+      bonuslyUsers[u.email] = u
       console.log(u.email)
     })
   })
+  // .then(res => console.log(bonuslyUsers))
   .catch(err => console.log(err))
 })
 
@@ -112,6 +113,20 @@ const processMessage = (userObj, channelObj, data) => {
 
     // remove mention text
     const feedback = data.text.replace(/<@ULGU042K1>/g, '').trim();
+
+    if (!userObj.profile.email) {
+      console.log('Slack user does not have an email.')
+      return
+    }
+    const userEmail = userObj.profile.email
+
+    // find bonusly user
+    const bonuslyUser = bonuslyUsers[userEmail]
+    if (!bonuslyUser) {
+      console.log(`Cannot find bonusly user for ${userEmail}`)
+      return
+    }
+    console.log(bonuslyUser)
 
     // thank user for feedback in the same channel it was submitted in
     if (userObj.name) {
