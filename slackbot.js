@@ -112,7 +112,19 @@ const processMessage = (userObj, channelObj, data) => {
   }
 
     // remove mention text
-    const feedback = data.text.replace(/<@ULGU042K1>/g, '').trim();
+    const msg = data.text.replace(/<@ULGU042K1>/g, '').trim();
+
+    console.log(`FULL MSG: ${msg}`)
+    if (!msg.indexOf('@') === -1) {
+      console.log('Invalid message. Does not mention a user. ')
+      bot.postMessageToUser(userObj.name, `Please mention a user in your message.`, params);
+      return;
+    }
+    const start = msg.indexOf('@')
+    const fragment = msg.slice(start)
+    const userID = fragment.slice(1, fragment.indexOf('>')); // start at 1 to chop off "@"
+    console.log(userID)
+
 
     if (!userObj.profile.email) {
       console.log('Slack user does not have an email.')
