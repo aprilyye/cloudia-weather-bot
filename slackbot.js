@@ -120,13 +120,24 @@ const processMessage = (userObj, channelObj, data) => {
     }
     const userEmail = userObj.profile.email
 
-    // find bonusly user
-    const bonuslyUser = bonuslyUsers[userEmail]
-    if (!bonuslyUser) {
-      console.log(`Cannot find bonusly user for ${userEmail}`)
-      return
+    // function: find bonusly user from email
+    const getBonuslyUserFromEmail = () => {
+      const bonuslyUser = bonuslyUsers[userEmail]
+      if (!bonuslyUser) {
+        console.log(`Cannot find bonusly user for ${userEmail}`)
+        return
+      }
+      // console.log(`Bonusly user id: ${bonuslyUser.id}`)
     }
-    console.log(bonuslyUser)
+
+
+    const POST_URL = `https://bonus.ly/api/v1/bonuses`
+    postData(POST_URL, {
+      "giver_email": userEmail,
+      "reason": "+1 @kashkambath sent from the #slackbotGOD",
+    })
+
+
 
     // thank user for feedback in the same channel it was submitted in
     if (userObj.name) {
@@ -148,3 +159,21 @@ const processMessage = (userObj, channelObj, data) => {
     bot.postMessageToGroup('private_group', 'meow!', params); 
     */
 };
+
+function postData(url = '', data = {}) {
+  // Default options are marked with *
+    return fetch(url, {
+        method: 'POST', // *GET, POST, PUT, DELETE, etc.
+        mode: 'cors', // no-cors, cors, *same-origin
+        cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+        credentials: 'same-origin', // include, *same-origin, omit
+        headers: {
+            'Content-Type': 'application/json',
+            // 'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        redirect: 'follow', // manual, *follow, error
+        referrer: 'no-referrer', // no-referrer, *client
+        body: JSON.stringify(data), // body data type must match "Content-Type" header
+    })
+    .then(response => response.json()); // parses JSON response into native JavaScript objects 
+}
