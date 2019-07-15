@@ -11,10 +11,10 @@ bot.on('message', function() {
     var params = {
         icon_emoji: ':money_with_wings:'
     };
-    console.log(bot.getUser('Gambly'));
+    console.log(bot.getUsers());
     
     // define channel, where bot exist. You can adjust it there https://my.slack.com/services 
-    bot.postMessageToChannel('general', 'meow!', params);
+    bot.postMessageToChannel('general', 'read ur msg!', params);
     
     /*
     // define existing username instead of 'user_name'
