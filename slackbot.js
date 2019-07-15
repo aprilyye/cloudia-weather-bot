@@ -1,4 +1,5 @@
 const SlackBot = require('slackbots');
+const fetch = require('node-fetch')
 
 // create a bot
 const bot = new SlackBot({
@@ -8,6 +9,23 @@ const bot = new SlackBot({
 
 // found by listing users: bot.getUsers().then(arr => console.log(arr))
 const BOT_ID = 'ULGU042K1'
+
+bot.on('start', () => {
+  // fetch users and add to Map
+  let users = {}
+  fetch('https://bonus.ly/api/v1/users?access_token=ebd604cacd64f1296a27fa867a57ec3b')
+  //fetch('https://bonus.ly/api/v1/bonuses?access_token=ebd604cacd64f1296a27fa867a57ec3b')
+  .then(res => res.json())
+  .then(res => {
+    users = res.result
+    // console.log(users)
+    users.map(u => {
+      users[u.email] = u
+      console.log(u.email)
+    })
+  })
+  .catch(err => console.log(err))
+})
 
 // on event firing (all events)
 bot.on('message', (data) => {

@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/fhinkel/nodejs-hello-world#readme",
   "dependencies": {
+    "node-fetch": "^2.6.0",
     "nodemon": "^1.19.1",
     "slackbots": "^1.2.0"
   }
