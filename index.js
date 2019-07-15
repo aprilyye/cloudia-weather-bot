@@ -8,5 +8,5 @@ var server = http.createServer(function(request, response) {
 
 });
 
-var port = 8001;
+var port = process.env.PORT || 8080;
 server.listen(port);
