@@ -1,7 +1,7 @@
 {
-  "name": "nodejs-hello-world",
+  "name": "Gambly",
   "version": "1.0.0",
-  "description": "Hello World sample app",
+  "description": "Bonusly gambling system",
   "main": "index.js",
   "scripts": {
     "start": "node slackbot.js",
@@ -9,14 +9,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/fhinkel/nodejs-hello-world.git"
+    "url": "git+https://github.com/anuragpapolu/gambly.git"
   },
   "author": "fhinkel",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/fhinkel/nodejs-hello-world/issues"
+    "url": "https://github.com/anuragpapolu/gambly/issues"
   },
-  "homepage": "https://github.com/fhinkel/nodejs-hello-world#readme",
+  "homepage": "https://github.com/anuragpapolu/gambly#readme",
   "dependencies": {
     "node-fetch": "^2.6.0",
     "nodemon": "^1.19.1",
