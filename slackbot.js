@@ -171,25 +171,38 @@ const processMessage = (userObj, channelObj, data) => {
 
       const giverEmail = getEmailFromSlackUser(userObj)
 
+      const confirmationMessage = {
+        "text": giverEmail + " would like to gamble 1 bonusly point!",
+        "attachments": [
+            {
+                "color": "#3AA3E3",
+                "attachment_type": "default",
+                "actions": [
+                    {
+                        "name": "yes",
+                        "text": "Yes",
+                        "type": "button",
+                        "value": true
+                    },
+                    {
+                        "name": "no",
+                        "text": "No",
+                        "type": "button",
+                        "value": false
+                    }
+                ]
+            }
+        ]
+      }
 
-      const POST_URL = `https://bonus.ly/api/v1/bonuses`
-      postData(POST_URL, {
-        "giver_email": giverEmail,
-        "reason": `+1 @${bonuslyUser.username} ${msg} #gambly`,
-      })
-      .then(res => console.log(res))
-      .catch(err => console.log(err))
+
+      bot.postMessageToUser(receiverObj.username, confirmationMessage);
     })
 
 
 
     // thank user for feedback in the same channel it was submitted in
-    if (userObj.name) {
-      bot.postMessageToUser(userObj.name, `Thanks for your feedback, ${userObj.name}!`, params);
-    }
 
-    // define channel, where bot exist. You can adjust it there https://my.slack.com/services 
-    bot.postMessageToChannel('general', 'read ur msg!', params);
     
     /*
     // define existing username instead of 'user_name'
