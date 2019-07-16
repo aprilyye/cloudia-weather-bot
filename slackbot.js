@@ -175,33 +175,41 @@ const processMessage = (userObj, channelObj, data) => {
       }
       const receiverObj = users[0]
 
-      const email = getEmailFromSlackUser(receiverObj)
-      console.log(email)
-      const bonuslyUser = getBonuslyUserFromEmail(email)
-      console.log(bonuslyUser.username)
-
-      const giverEmail = getEmailFromSlackUser(userObj)
-
-
       const POST_URL = `https://bonus.ly/api/v1/bonuses`
-      postData(POST_URL, {
-        "giver_email": giverEmail,
-        "reason": `+${amount} @${bonuslyUser.username} ${msg} #gambly`,
-      })
-      .then(res => console.log(res))
-      .catch(err => console.log(err))
+      const approved = true;
+      
+      if (approved) {
+        const user1_roll = Math.random()
+        const user2_roll = Math.random()
+        console.log(user1_roll)
+        console.log(user2_roll)
+        let giverEmail, bonuslyUser, email
+
+        if (user1_roll > user2_roll) {
+          giverEmail = getEmailFromSlackUser(receiverObj)
+          email = getEmailFromSlackUser(userObj)
+          bonuslyUser = getBonuslyUserFromEmail(email)
+        } else {
+          giverEmail = getEmailFromSlackUser(userObj)
+          email = getEmailFromSlackUser(receiverObj)
+          bonuslyUser = getBonuslyUserFromEmail(email)
+        }
+
+        postData(POST_URL, {
+          "giver_email": giverEmail,
+          "reason": `+${amount} @${bonuslyUser.username} ${msg} #gambly`,
+        })
+        .then(res => console.log(res))
+        .catch(err => console.log(err))
+        bot.postMessageToChannel ('general', `${bonuslyUser.username} has won the wager!`);
+      }
     })
-
-
 
     // thank user for feedback in the same channel it was submitted in
     if (userObj.name) {
       bot.postMessageToUser(userObj.name, `Thanks for your feedback, ${userObj.name}!`, params);
     }
 
-    // define channel, where bot exist. You can adjust it there https://my.slack.com/services 
-    bot.postMessageToChannel('general', 'read ur msg!', params);
-    
     /*
     // define existing username instead of 'user_name'
     bot.postMessageToUser('user_name', 'meow!', params); 
