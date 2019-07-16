@@ -1,6 +1,13 @@
 const SlackBot = require('slackbots');
 const fetch = require('node-fetch')
 
+if (!process.env.APIKEY) {
+  console.error('Set APIKEY in .env')
+}
+if (!process.env.BONUSLY_TOKEN) {
+  console.error('Set BONUSLY_TOKEN in .env')
+}
+
 // create a bot
 const bot = new SlackBot({
     token: process.env.APIKEY, // Add a bot https://my.slack.com/services/new/bot and put the token 
@@ -14,7 +21,7 @@ let bonuslyUsers = {}
 
 bot.on('start', () => {
   // fetch users and add to Map
-  fetch('https://bonus.ly/api/v1/users?access_token=ebd604cacd64f1296a27fa867a57ec3b')
+  fetch(`https://bonus.ly/api/v1/users?access_token=${process.env.BONUSLY_TOKEN}`)
   //fetch('https://bonus.ly/api/v1/bonuses?access_token=ebd604cacd64f1296a27fa867a57ec3b')
   .then(res => res.json())
   .then(res => {
@@ -69,6 +76,25 @@ const findChannel = channelID =>
   .then(obj => obj.channels.filter(channel => channel.id === channelID))
   .then(arr => arr[0]) // pick 1 (should only be one anyways)
   .catch(err => console.log(err));
+
+
+const getEmailFromSlackUser = (userObj) => {
+  if (!userObj.profile.email) {
+    console.log('Slack user does not have an email.')
+    return
+  }
+  return userObj.profile.email
+}
+
+// function: find bonusly user from email
+const getBonuslyUserFromEmail = () => {
+  const bonuslyUser = bonuslyUsers[userEmail]
+  if (!bonuslyUser) {
+    console.log(`Cannot find bonusly user for ${userEmail}`)
+    return
+  }
+  // console.log(`Bonusly user id: ${bonuslyUser.id}`)
+}
 
 const processMessage = (userObj, channelObj, data) => {
     // more information about additional params https://api.slack.com/methods/chat.postMessage
@@ -132,26 +158,14 @@ const processMessage = (userObj, channelObj, data) => {
         console.log(`User not found for user id ${userID}`)
       }
       const receiverObj = users[0]
-      console.log(receiverObj)
+
+      const email = getEmailFromSlackUser(receiverObj)
+      console.log(email)
+      const bonuslyUser = getBonuslyUserFromEmail(email)
+      console.log(bonuslyUser)
     })
 
-
-
-    if (!userObj.profile.email) {
-      console.log('Slack user does not have an email.')
-      return
-    }
-    const userEmail = userObj.profile.email
-
-    // function: find bonusly user from email
-    const getBonuslyUserFromEmail = () => {
-      const bonuslyUser = bonuslyUsers[userEmail]
-      if (!bonuslyUser) {
-        console.log(`Cannot find bonusly user for ${userEmail}`)
-        return
-      }
-      // console.log(`Bonusly user id: ${bonuslyUser.id}`)
-    }
+    const userEmail = getEmailFromSlackUser(userObj)
 
 
     const POST_URL = `https://bonus.ly/api/v1/bonuses`
