@@ -123,9 +123,18 @@ const processMessage = (userObj, channelObj, data) => {
     const start = msg.indexOf('@')
     const fragment = msg.slice(start)
     const userID = fragment.slice(1, fragment.indexOf('>')); // start at 1 to chop off "@"
-    console.log(userID)
-    const receiverObj = bot.getUserById(userID)
-    console.log(receiverObj)
+    console.log(userID + "\n")
+    
+    // NOTE: bot.getUserById is broken lol
+    bot.getUsers().then(e => {
+      const users = e.members.filter( u => u.id == userID)
+      if (!users[0]) {
+        console.log(`User not found for user id ${userID}`)
+      }
+      const receiverObj = users[0]
+      console.log(receiverObj)
+    })
+
 
 
     if (!userObj.profile.email) {
