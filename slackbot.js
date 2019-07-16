@@ -79,6 +79,10 @@ const findChannel = channelID =>
 
 
 const getEmailFromSlackUser = (userObj) => {
+  if (!userObj) {
+    console.log('Slack user is undefined.')
+    return
+  }
   if (!userObj.profile.email) {
     console.log('Slack user does not have an email.')
     return
@@ -87,12 +91,13 @@ const getEmailFromSlackUser = (userObj) => {
 }
 
 // function: find bonusly user from email
-const getBonuslyUserFromEmail = () => {
-  const bonuslyUser = bonuslyUsers[userEmail]
+const getBonuslyUserFromEmail = (userEmail) => {
+  const bonuslyUser = bonuslyUsers[userEmail || '']
   if (!bonuslyUser) {
-    console.log(`Cannot find bonusly user for ${userEmail}`)
+    console.log(`Cannot find bonusly user for "${userEmail}"`)
     return
   }
+  return bonuslyUser
   // console.log(`Bonusly user id: ${bonuslyUser.id}`)
 }
 
@@ -162,16 +167,18 @@ const processMessage = (userObj, channelObj, data) => {
       const email = getEmailFromSlackUser(receiverObj)
       console.log(email)
       const bonuslyUser = getBonuslyUserFromEmail(email)
-      console.log(bonuslyUser)
-    })
+      // console.log(bonuslyUser)
 
-    const userEmail = getEmailFromSlackUser(userObj)
+      const giverEmail = getEmailFromSlackUser(userObj)
 
 
-    const POST_URL = `https://bonus.ly/api/v1/bonuses`
-    postData(POST_URL, {
-      "giver_email": userEmail,
-      "reason": "+1 @kashkambath sent from the #slackbotGOD",
+      const POST_URL = `https://bonus.ly/api/v1/bonuses`
+      postData(POST_URL, {
+        "giver_email": giverEmail,
+        "reason": "+1 @kashkambath sent from the #slackbotGOD",
+      })
+      .then(res => console.log(res))
+      .catch(err => console.log(err))
     })
 
 
@@ -207,6 +214,7 @@ function postData(url = '', data = {}) {
         headers: {
             'Content-Type': 'application/json',
             // 'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': `Bearer ${process.env.BONUSLY_TOKEN}`
         },
         redirect: 'follow', // manual, *follow, error
         referrer: 'no-referrer', // no-referrer, *client
