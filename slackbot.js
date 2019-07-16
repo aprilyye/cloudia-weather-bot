@@ -167,7 +167,7 @@ const processMessage = (userObj, channelObj, data) => {
       const email = getEmailFromSlackUser(receiverObj)
       console.log(email)
       const bonuslyUser = getBonuslyUserFromEmail(email)
-      // console.log(bonuslyUser)
+      console.log(bonuslyUser.username)
 
       const giverEmail = getEmailFromSlackUser(userObj)
 
@@ -175,7 +175,7 @@ const processMessage = (userObj, channelObj, data) => {
       const POST_URL = `https://bonus.ly/api/v1/bonuses`
       postData(POST_URL, {
         "giver_email": giverEmail,
-        "reason": "+1 @kashkambath sent from the #slackbotGOD",
+        "reason": `+1 @${bonuslyUser.username} ${msg} #gambly`,
       })
       .then(res => console.log(res))
       .catch(err => console.log(err))
