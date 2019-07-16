@@ -143,7 +143,7 @@ const processMessage = (userObj, channelObj, data) => {
   }
 
     // remove mention text
-    const msg = data.text.replace(/<@ULGU042K1>/g, '').trim();
+    let msg = data.text.replace(/<@ULGU042K1>/g, '').trim();
 
     console.log(`FULL MSG: ${msg}`)
     if (!msg.indexOf('@') === -1) {
@@ -156,6 +156,17 @@ const processMessage = (userObj, channelObj, data) => {
     const userID = fragment.slice(1, fragment.indexOf('>')); // start at 1 to chop off "@"
     console.log(userID + "\n")
     
+    if (!msg.indexOf('+') === -1) {
+      console.log('Invalid message. Does not mention an amount of Bonusly to give. ')
+      bot.postMessageToUser(userObj.name, `Please mention an amount of Bonusly to give.`, params);
+      return;
+    }
+    const amtStart = msg.indexOf('+')
+    const amtFragment = msg.slice(amtStart)
+    const amount = amtFragment.slice(1, amtFragment.indexOf('>'));
+    console.log(amount + "\n")
+
+    msg = msg.replace("+"+amount, "")
     // NOTE: bot.getUserById is broken lol
     bot.getUsers().then(e => {
       const users = e.members.filter( u => u.id == userID)
@@ -195,8 +206,13 @@ const processMessage = (userObj, channelObj, data) => {
         ]
       }
 
-
-      bot.postMessageToUser(receiverObj.username, confirmationMessage);
+      const POST_URL = `https://bonus.ly/api/v1/bonuses`
+      postData(POST_URL, {
+        "giver_email": giverEmail,
+        "reason": `+${amount} @${bonuslyUser.username} ${msg} #gambly`,
+      })
+      .then(res => console.log(res))
+      .catch(err => console.log(err))
     })
 
 
