@@ -183,17 +183,12 @@ const processMessage = (userObj, channelObj, data) => {
         const user2_roll = Math.random()
         console.log(user1_roll)
         console.log(user2_roll)
-        let giverEmail, bonuslyUser, email
+        let winner = (user1_roll >= user2_roll ? userObj : receiverObj)
+        let loser = (user1_roll < user2_roll ? userObj : receiverObj)
 
-        if (user1_roll > user2_roll) {
-          giverEmail = getEmailFromSlackUser(receiverObj)
-          email = getEmailFromSlackUser(userObj)
-          bonuslyUser = getBonuslyUserFromEmail(email)
-        } else {
-          giverEmail = getEmailFromSlackUser(userObj)
-          email = getEmailFromSlackUser(receiverObj)
-          bonuslyUser = getBonuslyUserFromEmail(email)
-        }
+        let giverEmail = getEmailFromSlackUser(winner)
+        let email = getEmailFromSlackUser(loser)
+        let bonuslyUser = getBonuslyUserFromEmail(email)
 
         postData(POST_URL, {
           "giver_email": giverEmail,
