@@ -180,16 +180,10 @@ const processMessage = (userObj, channelObj, data) => {
       const approved = true;
       
       if (approved) {
-        const users = [userObj.id, receiverObj.id]
-        let user1_roll, user2_roll; 
+        const users = [userObj, receiverObj]
         console.log("Starting atlas query...")
-        atlasWinner(users).then((rolls) => {
-           user1_roll = rolls[0]
-           user2_roll = rolls[1]
-          console.log(user1_roll)
-          console.log(user2_roll)
-          let winner = (user1_roll >= user2_roll ? userObj : receiverObj)
-          let loser = (user1_roll < user2_roll ? userObj : receiverObj)
+        atlasWinner(users).then((winner) => {
+          let loser = winner.id == userObj.id? receiverObj : userObj
 
           let giverEmail = getEmailFromSlackUser(winner)
           let email = getEmailFromSlackUser(loser)
@@ -211,22 +205,11 @@ const processMessage = (userObj, channelObj, data) => {
     if (userObj.name) {
       bot.postMessageToUser(userObj.name, `Thanks for your feedback, ${userObj.name}!`, params);
     }
-
-    /*
-    // define existing username instead of 'user_name'
-    bot.postMessageToUser('user_name', 'meow!', params); 
-    
-    // If you add a 'slackbot' property, 
-    // you will post to another user's slackbot channel instead of a direct message
-    bot.postMessageToUser('user_name', 'meow!', { 'slackbot': true, icon_emoji: ':cat:' }); 
-    
-    // define private group instead of 'private_group', where bot exist
-    bot.postMessageToGroup('private_group', 'meow!', params); 
-    */
 };
 
+// take in 2 user objects and returns the winning object
 async function atlasWinner(users) {
-  let user1_roll, user2_roll;
+  let winner = users[Math.floor(Math.random() * users.length)];
 
   const MongoClient = require('mongodb').MongoClient;
   const uri = process.env.MONGO_URI;
@@ -252,18 +235,14 @@ async function atlasWinner(users) {
   await bets.deleteMany({ betId: betId })
   await db.close()
 
+  // check for empty lists 
   if (winnersList.length > 0) {
-    user1_roll = (winnersList[0].winner == users[0] ? 1 : 0)
-    user2_roll = (winnersList[0].winner == users[1] ? 1 : 0)  
-  } else {
-    user1_roll = Math.random()
-    user2_roll = Math.random()
+    winner = winnersList[0].winner
   }
-
 
   return new Promise((resolve, reject) => {
     try {
-      resolve([user1_roll, user2_roll]);
+      resolve(winner);
     } catch (error) {
       reject(error);
     }
