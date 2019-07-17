@@ -104,9 +104,6 @@ const getBonuslyUserFromEmail = (userEmail) => {
 
 const processMessage = (userObj, channelObj, data) => {
     // more information about additional params https://api.slack.com/methods/chat.postMessage
-    const params = {
-        icon_emoji: ':money_with_wings:'
-    };
     // bot.getUsers().then(arr => console.log(arr)).catch(err => console.log(err))
     
 
@@ -149,25 +146,93 @@ const processMessage = (userObj, channelObj, data) => {
     console.log(`FULL MSG: ${msg}`)
     if (!msg.indexOf('@') === -1) {
       console.log('Invalid message. Does not mention a user. ')
-      bot.postMessageToUser(userObj.name, `Please mention a user in your message.`, params);
+      bot.postMessageToUser(userObj.name, `Please mention a user in your message.`, {});
       return;
     }
     const start = msg.indexOf('@')
     const fragment = msg.slice(start)
+    //userID is the RECIPIENT userID
     const userID = fragment.slice(1, fragment.indexOf('>')); // start at 1 to chop off "@"
-    console.log(userID + "\n")
+    console.log("recipientID: " + userID + "\n")
     
     if (!msg.indexOf('+') === -1) {
       console.log('Invalid message. Does not mention an amount of Bonusly to give. ')
-      bot.postMessageToUser(userObj.name, `Please mention an amount of Bonusly to give.`, params);
+      bot.postMessageToUser(userObj.name, `Please mention an amount of Bonusly to give.`, {});
       return;
     }
-    const amtStart = msg.indexOf('+')
-    const amtFragment = msg.slice(amtStart)
-    const amount = amtFragment.slice(1, amtFragment.indexOf('>'));
-    console.log(amount + "\n")
+    console.log("# of +'s: " + (msg.split("+").length-1) )
+    if (msg.split("+").length > 2) {
+      console.log('Should only have one + sign in the message')
+      bot.postMessageToUser(userObj.name, 'Please put only one + sign in your message to specify the amount.', {});
+      return;
+    }
+    console.log("findAmount(msg): " + findAmount(msg));
+    // const amtStart = msg.indexOf('+')
+    // const amtFragment = msg.slice(amtStart)
+    // const amount = amtFragment.slice(1, amtFragment.indexOf('>'));
+    const amount = findAmount(msg)
+    if (!amount) {
+      console.log("Invalid amount specified")
+      bot.postMessageToUser(userObj.name, "Invalid amount specified, please provide a valid amount.")
+      return
+    }
+    console.log("amount: " + amount + "\n")
 
     msg = msg.replace("+"+amount, "")
+
+    console.log("msg after amount removed: " + msg)
+    console.log("reason: " + findReason(msg))
+
+    finalMsg = findReason(msg)
+
+    const bonuslyReq = [
+      {
+        "type": "section",
+        "text": {
+          "type": "mrkdwn",
+          "text": `You have a new Gambly bet request from ${getBonuslyUserFromEmail(getEmailFromSlackUser(userObj)).full_name}! Would you like to approve it?`
+        }
+      },
+      {
+        "type": "section",
+        "fields": [
+        
+          {
+            "type": "mrkdwn",
+            "text": `*Bonusly Amount:*\n${amount}`
+          },
+          {
+            "type": "mrkdwn",
+            "text": `*Reason:*\n${finalMsg}`
+          }
+        ]
+      },
+      {
+        "type": "actions",
+        "elements": [
+          {
+            "type": "button",
+            "text": {
+              "type": "plain_text",
+              "emoji": true,
+              "text": "Yes"
+            },
+            "style": "primary",
+            "value": "true"
+          },
+          {
+            "type": "button",
+            "text": {
+              "type": "plain_text",
+              "emoji": true,
+              "text": "No"
+            },
+            "style": "danger",
+            "value": "false"
+          }
+        ]
+      }
+    ]
     // NOTE: bot.getUserById is broken lol
     bot.getUsers().then(e => {
       const users = e.members.filter( u => u.id == userID)
@@ -176,7 +241,41 @@ const processMessage = (userObj, channelObj, data) => {
       }
       const receiverObj = users[0]
 
-      const userEmail = getEmailFromSlackUser(userObj)
+      const email = getEmailFromSlackUser(receiverObj)
+      console.log(email)
+      const bonuslyUser = getBonuslyUserFromEmail(email)
+      console.log("Bonusly recipient full name: " + bonuslyUser.full_name)
+
+      const params = {
+        blocks: bonuslyReq
+      };
+      console.log("userObj name: " + userObj.name)
+      console.log("recipient userID: " + userID)
+      console.log("recipient name: " + receiverObj.name)
+      // const recipientName = findUser(userID).name
+      if (receiverObj.name) {
+        const recipientName = receiverObj.name
+        // msgString = `You're about to receive a Bonusly bet request from ${userObj.name}!`
+        bot.postMessageToUser(recipientName, "", params, (payload, err) => {
+          if (err) {
+            console.log(err)
+          } else {
+            console.log("payload: " + JSON.stringify(payload))
+          }
+        }).then(payload => {
+          console.log(payload)
+        }).catch(err => console.log(err))
+      }
+      const giverEmail = getEmailFromSlackUser(userObj)
+
+//       const POST_URL = `https://bonus.ly/api/v1/bonuses`
+//       postData(POST_URL, {
+//         "giver_email": giverEmail,
+//         "reason": `+${amount} @${bonuslyUser.username} ${msg} #gambly`,
+//       })
+//       .then(res => console.log(res))
+//       .catch(err => console.log(err))
+//       const userEmail = getEmailFromSlackUser(userObj)
       const userBalance = getBonuslyUserFromEmail(userEmail)['giving_balance']
       const receiverEmail = getEmailFromSlackUser(receiverObj)
       const receiverBalance = getBonuslyUserFromEmail(receiverEmail)['giving_balance']
@@ -277,4 +376,49 @@ function postData(url = '', data = {}) {
         body: JSON.stringify(data), // body data type must match "Content-Type" header
     })
     .then(response => response.json()); // parses JSON response into native JavaScript objects 
+}
+
+function findAmount(msg = '') {
+  if (msg == '') {
+    console.error("Message cannot be empty if trying to find amount");
+  }
+  const regex = /\+(\d+)/gm;
+  let m;
+
+  while ((m = regex.exec(msg)) !== null) {
+    // This is necessary to avoid infinite loops with zero-width matches
+    if (m.index === regex.lastIndex) {
+        regex.lastIndex++;
+    }
+    
+    // The result can be accessed through the `m`-variable.
+    m.forEach((match, groupIndex) => {
+        console.log(`Found match, group ${groupIndex}: ${match}`);
+    });
+    return m[1]
+  }
+}
+
+function findReason(msg = '') {
+  if (msg == '') {
+    console.error("Message cannot be empty if trying to find amount");
+  }
+
+  const regex = /<[^>]*>/gm;
+  let m;
+
+  while ((m = regex.exec(msg)) !== null) {
+      // This is necessary to avoid infinite loops with zero-width matches
+      if (m.index === regex.lastIndex) {
+          regex.lastIndex++;
+      }
+      
+      // The result can be accessed through the `m`-variable.
+      m.forEach((match, groupIndex) => {
+          console.log(`Found match, group ${groupIndex}: ${match}`);
+      });
+      console.log("m[0]: " + m[0])
+      msg = msg.replace(m[0], "").trim()
+      return msg
+  }
 }
