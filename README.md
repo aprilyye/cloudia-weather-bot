@@ -23,3 +23,14 @@ Tech
 - [Bonusly API](https://bonusly.docs.apiary.io/#)
 
 > NOTE: need to restart app when adding new Slack users.
+
+
+How to call Gambly in Slack
+---
+Example bet request:
+
+```@gambly @johnny.appleseed +40 If you save plant 40 trees!```
+
+Alternatively, one may write:
+
+```@gambly +20 @champagne.papi If you drop an album by the end of this October```

@@ -1,5 +1,6 @@
 const SlackBot = require('slackbots');
 const fetch = require('node-fetch')
+const uuidv1 = require('uuid/v1');
 
 if (!process.env.APIKEY) {
   console.error('Set APIKEY in .env')
@@ -21,7 +22,7 @@ let bonuslyUsers = {}
 
 bot.on('start', () => {
   // fetch users and add to Map
-  fetch(`https://bonus.ly/api/v1/users?access_token=${process.env.BONUSLY_TOKEN}`)
+  fetch(`https://bonus.ly/api/v1/users?access_token=${process.env.BONUSLY_TOKEN}&show_financial_data=true`)
   //fetch('https://bonus.ly/api/v1/bonuses?access_token=ebd604cacd64f1296a27fa867a57ec3b')
   .then(res => res.json())
   .then(res => {
@@ -267,37 +268,96 @@ const processMessage = (userObj, channelObj, data) => {
       }
       const giverEmail = getEmailFromSlackUser(userObj)
 
+//       const POST_URL = `https://bonus.ly/api/v1/bonuses`
+//       postData(POST_URL, {
+//         "giver_email": giverEmail,
+//         "reason": `+${amount} @${bonuslyUser.username} ${msg} #gambly`,
+//       })
+//       .then(res => console.log(res))
+//       .catch(err => console.log(err))
+//       const userEmail = getEmailFromSlackUser(userObj)
+      const userBalance = getBonuslyUserFromEmail(userEmail)['giving_balance']
+      const receiverEmail = getEmailFromSlackUser(receiverObj)
+      const receiverBalance = getBonuslyUserFromEmail(receiverEmail)['giving_balance']
+      
+      if (userBalance < parseInt(amount)) {
+        bot.postMessageToChannel ('general', `${userObj.name} has insufficient balance`);
+        return;
+      } else if (receiverBalance < parseInt(amount)) {
+        bot.postMessageToChannel ('general', `${receiverObj.name} has insufficient balance`);
+        return;
+      }
+
       const POST_URL = `https://bonus.ly/api/v1/bonuses`
-      postData(POST_URL, {
-        "giver_email": giverEmail,
-        "reason": `+${amount} @${bonuslyUser.username} ${msg} #gambly`,
-      })
-      .then(res => console.log(res))
-      .catch(err => console.log(err))
+      const approved = true;
+      
+      if (approved) {
+        const users = [userObj, receiverObj]
+
+        console.log("Starting atlas query...")
+
+        atlasWinner(users).then((winner) => {
+        let loser = (winner.id == userObj.id ? receiverObj : userObj)
+        
+          let giverEmail = getEmailFromSlackUser(winner)
+          let email = getEmailFromSlackUser(loser)
+          let bonuslyUser = getBonuslyUserFromEmail(email)
+
+          postData(POST_URL, {
+            "giver_email": giverEmail,
+            "reason": `+${amount} @${bonuslyUser.username} ${msg} #gambly`,
+          })
+          .then(res => console.log(res))
+          .catch(err => console.log(err))
+          bot.postMessageToChannel ('general', `${bonuslyUser.username} has won the wager!`);
+        })
+        .catch(err => console.log(err))
+      }
     })
-
-
-
-    // thank user for feedback in the same channel it was submitted in
-    // if (userObj.name) {
-    //   bot.postMessageToUser(userObj.name, `Your Bonusly bet request to ${bonuslyUser.full_name} has been sent!`, params);
-    // }
-
-    // define channel, where bot exist. You can adjust it there https://my.slack.com/services 
-    bot.postMessageToChannel('general', 'read ur msg!', {});
-    
-    /*
-    // define existing username instead of 'user_name'
-    bot.postMessageToUser('user_name', 'meow!', params); 
-    
-    // If you add a 'slackbot' property, 
-    // you will post to another user's slackbot channel instead of a direct message
-    bot.postMessageToUser('user_name', 'meow!', { 'slackbot': true, icon_emoji: ':cat:' }); 
-    
-    // define private group instead of 'private_group', where bot exist
-    bot.postMessageToGroup('private_group', 'meow!', params); 
-    */
 };
+
+// take in 2 user objects and returns the winning object
+async function atlasWinner(users) {
+  let winner = users[Math.floor(Math.random() * users.length)];
+
+  const MongoClient = require('mongodb').MongoClient;
+  const uri = process.env.MONGO_URI;
+  console.log("Connecting to Atlas")
+  const db = await MongoClient.connect(uri, { useNewUrlParser: true });
+  console.log("Connected to Atlas")
+
+  const bets = db.db("gambly").collection("bets");
+  
+  const betId = uuidv1();
+  await bets.insertOne(
+      { betId: betId, winner: users[0] }
+  );
+  await bets.insertOne(
+      { betId: betId, winner: users[1] }
+  );
+
+  const winnersList = await bets.aggregate([ 
+    { $match: { betId: betId } },
+    { $sample: { size: 1 } } 
+  ]).toArray();
+
+  await bets.deleteMany({ betId: betId })
+  await db.close()
+
+  // check for empty lists 
+  if (winnersList.length > 0) {
+    winner = winnersList[0].winner
+  }
+
+  return new Promise((resolve, reject) => {
+    try {
+      resolve(winner);
+    } catch (error) {
+      reject(error);
+    }
+  });
+
+}
 
 function postData(url = '', data = {}) {
   // Default options are marked with *
