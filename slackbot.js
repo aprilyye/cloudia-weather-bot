@@ -194,10 +194,12 @@ const processMessage = (userObj, channelObj, data) => {
       
       if (approved) {
         const users = [userObj, receiverObj]
-        console.log("Starting atlas query...")
-        atlasWinner(users).then((winner) => {
-          let loser = winner.id == userObj.id? receiverObj : userObj
 
+        console.log("Starting atlas query...")
+
+        atlasWinner(users).then((winner) => {
+        let loser = (winner.id == userObj.id ? receiverObj : userObj)
+        
           let giverEmail = getEmailFromSlackUser(winner)
           let email = getEmailFromSlackUser(loser)
           let bonuslyUser = getBonuslyUserFromEmail(email)
@@ -213,11 +215,6 @@ const processMessage = (userObj, channelObj, data) => {
         .catch(err => console.log(err))
       }
     })
-
-    // thank user for feedback in the same channel it was submitted in
-    if (userObj.name) {
-      bot.postMessageToUser(userObj.name, `Thanks for your feedback, ${userObj.name}!`, params);
-    }
 };
 
 // take in 2 user objects and returns the winning object
