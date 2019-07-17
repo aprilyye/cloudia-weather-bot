@@ -22,7 +22,7 @@ let bonuslyUsers = {}
 
 bot.on('start', () => {
   // fetch users and add to Map
-  fetch(`https://bonus.ly/api/v1/users?access_token=${process.env.BONUSLY_TOKEN}`)
+  fetch(`https://bonus.ly/api/v1/users?access_token=${process.env.BONUSLY_TOKEN}&show_financial_data=true`)
   //fetch('https://bonus.ly/api/v1/bonuses?access_token=ebd604cacd64f1296a27fa867a57ec3b')
   .then(res => res.json())
   .then(res => {
@@ -175,6 +175,19 @@ const processMessage = (userObj, channelObj, data) => {
         console.log(`User not found for user id ${userID}`)
       }
       const receiverObj = users[0]
+
+      const userEmail = getEmailFromSlackUser(userObj)
+      const userBalance = getBonuslyUserFromEmail(userEmail)['giving_balance']
+      const receiverEmail = getEmailFromSlackUser(receiverObj)
+      const receiverBalance = getBonuslyUserFromEmail(receiverEmail)['giving_balance']
+      
+      if (userBalance < parseInt(amount)) {
+        bot.postMessageToChannel ('general', `${userObj.name} has insufficient balance`);
+        return;
+      } else if (receiverBalance < parseInt(amount)) {
+        bot.postMessageToChannel ('general', `${receiverObj.name} has insufficient balance`);
+        return;
+      }
 
       const POST_URL = `https://bonus.ly/api/v1/bonuses`
       const approved = true;
