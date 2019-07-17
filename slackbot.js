@@ -1,5 +1,6 @@
 const SlackBot = require('slackbots');
 const fetch = require('node-fetch')
+const uuidv1 = require('uuid/v1');
 
 if (!process.env.APIKEY) {
   console.error('Set APIKEY in .env')
@@ -175,51 +176,42 @@ const processMessage = (userObj, channelObj, data) => {
       }
       const receiverObj = users[0]
 
-      const email = getEmailFromSlackUser(receiverObj)
-      console.log(email)
-      const bonuslyUser = getBonuslyUserFromEmail(email)
-      console.log(bonuslyUser.username)
-
-      const giverEmail = getEmailFromSlackUser(userObj)
-
-      const confirmationMessage = {
-        "text": giverEmail + " would like to gamble 1 bonusly point!",
-        "attachments": [
-            {
-                "color": "#3AA3E3",
-                "attachment_type": "default",
-                "actions": [
-                    {
-                        "name": "yes",
-                        "text": "Yes",
-                        "type": "button",
-                        "value": true
-                    },
-                    {
-                        "name": "no",
-                        "text": "No",
-                        "type": "button",
-                        "value": false
-                    }
-                ]
-            }
-        ]
-      }
-
       const POST_URL = `https://bonus.ly/api/v1/bonuses`
-      postData(POST_URL, {
-        "giver_email": giverEmail,
-        "reason": `+${amount} @${bonuslyUser.username} ${msg} #gambly`,
-      })
-      .then(res => console.log(res))
-      .catch(err => console.log(err))
+      const approved = true;
+      
+      if (approved) {
+        const users = [userObj.id, receiverObj.id]
+        let user1_roll, user2_roll; 
+        console.log("Starting atlas query...")
+        atlasWinner(users).then((rolls) => {
+           user1_roll = rolls[0]
+           user2_roll = rolls[1]
+          console.log(user1_roll)
+          console.log(user2_roll)
+          let winner = (user1_roll >= user2_roll ? userObj : receiverObj)
+          let loser = (user1_roll < user2_roll ? userObj : receiverObj)
+
+          let giverEmail = getEmailFromSlackUser(winner)
+          let email = getEmailFromSlackUser(loser)
+          let bonuslyUser = getBonuslyUserFromEmail(email)
+
+          postData(POST_URL, {
+            "giver_email": giverEmail,
+            "reason": `+${amount} @${bonuslyUser.username} ${msg} #gambly`,
+          })
+          .then(res => console.log(res))
+          .catch(err => console.log(err))
+          bot.postMessageToChannel ('general', `${bonuslyUser.username} has won the wager!`);
+        })
+        .catch(err => console.log(err))
+      }
     })
 
-
-
     // thank user for feedback in the same channel it was submitted in
+    if (userObj.name) {
+      bot.postMessageToUser(userObj.name, `Thanks for your feedback, ${userObj.name}!`, params);
+    }
 
-    
     /*
     // define existing username instead of 'user_name'
     bot.postMessageToUser('user_name', 'meow!', params); 
@@ -232,6 +224,52 @@ const processMessage = (userObj, channelObj, data) => {
     bot.postMessageToGroup('private_group', 'meow!', params); 
     */
 };
+
+async function atlasWinner(users) {
+  let user1_roll, user2_roll;
+
+  const MongoClient = require('mongodb').MongoClient;
+  const uri = process.env.MONGO_URI;
+  console.log("Connecting to Atlas")
+  const db = await MongoClient.connect(uri, { useNewUrlParser: true });
+  console.log("Connected to Atlas")
+
+  const bets = db.db("gambly").collection("bets");
+  
+  const betId = uuidv1();
+  await bets.insertOne(
+      { betId: betId, winner: users[0] }
+  );
+  await bets.insertOne(
+      { betId: betId, winner: users[1] }
+  );
+
+  const winnersList = await bets.aggregate([ 
+    { $match: { betId: betId } },
+    { $sample: { size: 1 } } 
+  ]).toArray();
+
+  await bets.deleteMany({ betId: betId })
+  await db.close()
+
+  if (winnersList.length > 0) {
+    user1_roll = (winnersList[0].winner == users[0] ? 1 : 0)
+    user2_roll = (winnersList[0].winner == users[1] ? 1 : 0)  
+  } else {
+    user1_roll = Math.random()
+    user2_roll = Math.random()
+  }
+
+
+  return new Promise((resolve, reject) => {
+    try {
+      resolve([user1_roll, user2_roll]);
+    } catch (error) {
+      reject(error);
+    }
+  });
+
+}
 
 function postData(url = '', data = {}) {
   // Default options are marked with *
