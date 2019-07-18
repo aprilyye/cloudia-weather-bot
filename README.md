@@ -5,7 +5,7 @@ Cloudia: A little reminder for weather it's gonna rain or shine! 🌦 On duty ev
 
 Made with 🌤 by Kevin Lin and April Ye
 
-![Cloudia](cloudia-logo.png | width = 100)
+![Cloudia](cloudia-logo.png | width=100)
 
 Try it locally
 ---
