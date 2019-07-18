@@ -44,24 +44,21 @@ function postData(url = "", data = {}) {
 
 // reminderInterval of 24 hours = # of seconds in 24 hours
 // https://stackoverflow.com/questions/2515047/how-do-i-add-24-hours-to-a-unix-timestamp-in-php
-function postInMorning(
-  weatherReport = "Good Morning!",
-  reminderIntervalSec = 0
-) {
-  console.log("reminderInterval: ", reminderIntervalSec);
+function postInMorning(weatherReport = "Good Morning!") {
+  var postingDate = new Date(); //gets current date object
+  let postingHourEST = 7;
+  let postingMinuteEST = 0;
+  // let utcESTHourDifferenceEST = 4; //to convert ETC to UTC, add 4 to EST
+  postingDate.setHours(postingHourEST, postingMinuteEST);
   console.log("posting in morning! with weather report: ", weatherReport);
-  let currentUnixTime = Date.now() / 1000;
-  console.log("currentUnixTime: " + currentUnixTime);
-  let newUnixTIme = currentUnixTime + reminderIntervalSec;
+  console.log("posting time: ", postingDate.getTime() / 1000);
+  console.log("posting date: ", postingDate);
   postData(POST_URL, {
     channel: "nyc",
     text: weatherReport,
-    post_at: newUnixTIme
+    post_at: postingDate.getTime() / 1000
   })
     .then(res => console.log(res))
-    // .then(() => {
-    //   newUnixTIme = set it!!!
-    // })
     .catch(err => console.log(err));
 }
 
@@ -70,11 +67,12 @@ bot.on("start", function() {
     .then(res => res.json())
     .then(res => {
       weatherReport = res.sentence;
-      reminderIntervalMS = 30000;
+      reminderIntervalMS = 24 * 60 * 60 * 1000;
+      //reminderIntervalMS = 30000;
+      postInMorning(weatherReport);
       setInterval(function() {
-        postInMorning(weatherReport, reminderIntervalMS / 1000);
+        postInMorning(weatherReport);
       }, reminderIntervalMS);
-      //postInMorning(weatherReport);
     })
     .catch(err => console.log(err));
 });
