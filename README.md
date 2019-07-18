@@ -3,7 +3,7 @@ Cloudia
 
 Cloudia: A little reminder for weather it's gonna rain or shine! 🌦 On duty every morning at 7AM EST or via summon ```@cloudia``` in any channel (reports back in same channel).
 
-Made with 🌤 by Kevin Lin and April Ye
+Developed with 🌤 by Kevin Lin and April Ye. Cloudia logo design by Sophia Meng.
 
 ![Cloudia](cloudia-logo.png)
 
