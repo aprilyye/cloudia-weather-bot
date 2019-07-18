@@ -42,13 +42,26 @@ function postData(url = "", data = {}) {
   }).then(response => response.json()); // parses JSON response into native JavaScript objects
 }
 
-function postInMorning(weatherReport = "Good Morning!") {
+// reminderInterval of 24 hours = # of seconds in 24 hours
+// https://stackoverflow.com/questions/2515047/how-do-i-add-24-hours-to-a-unix-timestamp-in-php
+function postInMorning(
+  weatherReport = "Good Morning!",
+  reminderIntervalSec = 0
+) {
+  console.log("reminderInterval: ", reminderIntervalSec);
+  console.log("posting in morning! with weather report: ", weatherReport);
+  let currentUnixTime = Date.now() / 1000;
+  console.log("currentUnixTime: " + currentUnixTime);
+  let newUnixTIme = currentUnixTime + reminderIntervalSec;
   postData(POST_URL, {
     channel: "nyc",
     text: weatherReport,
-    post_at: 1563473470
+    post_at: newUnixTIme
   })
     .then(res => console.log(res))
+    // .then(() => {
+    //   newUnixTIme = set it!!!
+    // })
     .catch(err => console.log(err));
 }
 
@@ -57,10 +70,14 @@ bot.on("start", function() {
     .then(res => res.json())
     .then(res => {
       weatherReport = res.sentence;
-      postInMorning(weatherReport);
+      reminderIntervalMS = 30000;
+      setInterval(function() {
+        postInMorning(weatherReport, reminderIntervalMS / 1000);
+      }, reminderIntervalMS);
+      //postInMorning(weatherReport);
     })
     .catch(err => console.log(err));
-})
+});
 
 // on event firing (all events)
 bot.on("message", data => {
@@ -191,5 +208,4 @@ const processMessage = (userObj, channelObj, data) => {
       );
     });
   }
-
 };
