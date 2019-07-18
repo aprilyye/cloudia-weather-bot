@@ -145,10 +145,16 @@ const processMessage = (userObj, channelObj, data) => {
     .then(res => {
       weatherReport = res.sentence;
       postToChannel(weatherReport);
+      postInMorning(weatherReport);
     })
     .catch(err => console.log(err));
 
   // POSTING TO CHANNEL
+  function postInMorning(weatherReport = "Good Morning!") {
+    bot.getUsers()
+      .then(users => {console.log("reached here"); console.log(users);})
+  }
+
   function postToChannel(weatherReport = "Cloudia is broken, sorry!") {
     bot
       .getChannels()
