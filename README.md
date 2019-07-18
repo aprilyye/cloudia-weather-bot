@@ -22,12 +22,13 @@ $ npm i
 $ heroku local
 ```
 
-Tech
+References
 ---
 
 - [mishk0/Slack-bot-api](https://github.com/mishk0/slack-bot-api)
 - [Dark Sky API](https://darksky.net/dev/docs#overview)
 - [Brella API](https://apps.apple.com/us/app/brella-personal-weather/id1163666072)
+- [Gambly Slack Bot)(https://github.com/anuragpapolu/gambly)
 
 How to call Cloudia in Slack
 ---
