@@ -139,14 +139,18 @@ const processMessage = (userObj, channelObj, data) => {
     .then(cs => cs.map(c => c.id))
     .then(console.log);
   findChannel(data.channel).then(channel => {
-    console.log("CHANNEL ID: ", channel.id);
-    bot.postMessageToChannel(channel.id, "", null, (payload, err) => {
-      if (err) {
-        console.log(err);
-      } else {
-        console.log("payload: " + JSON.stringify(payload));
+    bot.postMessageToChannel(
+      "random",
+      "weather is rainy",
+      null,
+      (payload, err) => {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log("payload: " + JSON.stringify(payload));
+        }
       }
-    });
+    );
   });
 
   const GET_URL = `https://bixby.brellaweatherapp.com/api/v1/assistant?key=${
