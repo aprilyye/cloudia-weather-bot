@@ -156,7 +156,7 @@ const processMessage = (userObj, channelObj, data) => {
       .then(console.log);
     findChannel(data.channel).then(channel => {
       bot.postMessageToChannel(
-        "random",
+        channel.name,
         weatherReport,
         null,
         (payload, err) => {
@@ -169,5 +169,4 @@ const processMessage = (userObj, channelObj, data) => {
       );
     });
   }
-
 };
