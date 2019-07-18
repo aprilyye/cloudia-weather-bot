@@ -48,11 +48,14 @@ function postInMorning(weatherReport = "Good Morning!") {
   var postingDate = new Date(); //gets current date object
   let postingHourEST = 7;
   let postingMinuteEST = 0;
+  if (postingDate.getHours() > 7) {
+    // update posting hour to next day
+    postingDate.setDate(postingDate.getDate() + 1);
+  }
   // let utcESTHourDifferenceEST = 4; //to convert ETC to UTC, add 4 to EST
   postingDate.setHours(postingHourEST, postingMinuteEST);
-  console.log("posting in morning! with weather report: ", weatherReport);
-  console.log("posting time: ", postingDate.getTime() / 1000);
-  console.log("posting date: ", postingDate);
+  // console.log("posting time: ", postingDate.getTime() / 1000);
+  // console.log("posting date: ", postingDate);
   postData(POST_URL, {
     channel: "nyc",
     text: weatherReport,
