@@ -2,6 +2,14 @@ const SlackBot = require("slackbots");
 const fetch = require("node-fetch");
 const uuidv1 = require("uuid/v1");
 
+const GET_URL = `https://bixby.brellaweatherapp.com/api/v1/assistant?key=${
+  process.env.APIKEY
+}&lat=40.714272&long=-74.005966&units=us`;
+
+const POST_URL = `https://slack.com/api/chat.scheduleMessage`;
+
+let weatherReport = "";
+
 if (!process.env.APIKEY) {
   console.error("Set APIKEY in .env");
 }
@@ -16,25 +24,43 @@ const bot = new SlackBot({
 //bot.getUsers().then(arr => console.log(arr))
 const BOT_ID = "UL6GS3G5Q";
 
-// bot.on("start", () => {
-//   // fetch users and add to Map
-//   fetch(
-//     `https://bonus.ly/api/v1/users?access_token=${
-//       process.env.BONUSLY_TOKEN
-//     }&show_financial_data=true`
-//   )
-//     //fetch('https://bonus.ly/api/v1/bonuses?access_token=ebd604cacd64f1296a27fa867a57ec3b')
-//     .then(res => res.json())
-//     .then(res => {
-//       // console.log(users)
-//       res.result.forEach(u => {
-//         bonuslyUsers[u.email] = u;
-//         console.log(u.email);
-//       });
-//     })
-//     // .then(res => console.log(bonuslyUsers))
-//     .catch(err => console.log(err));
-// });
+function postData(url = "", data = {}) {
+  // Default options are marked with *
+  return fetch(url, {
+    method: "POST", // *GET, POST, PUT, DELETE, etc.
+    mode: "cors", // no-cors, cors, *same-origin
+    cache: "no-cache", // *default, no-cache, reload, force-cache, only-if-cached
+    credentials: "same-origin", // include, *same-origin, omit
+    headers: {
+      "Content-Type": "application/json",
+      // 'Content-Type': 'application/x-www-form-urlencoded',
+      Authorization: `Bearer ${process.env.SLACKTOKEN}`
+    },
+    redirect: "follow", // manual, *follow, error
+    referrer: "no-referrer", // no-referrer, *client
+    body: JSON.stringify(data) // body data type must match "Content-Type" header
+  }).then(response => response.json()); // parses JSON response into native JavaScript objects
+}
+
+function postInMorning(weatherReport = "Good Morning!") {
+  postData(POST_URL, {
+    channel: "nyc",
+    text: weatherReport,
+    post_at: 1563473470
+  })
+    .then(res => console.log(res))
+    .catch(err => console.log(err));
+}
+
+bot.on("start", function() {
+  fetch(GET_URL)
+    .then(res => res.json())
+    .then(res => {
+      weatherReport = res.sentence;
+      postInMorning(weatherReport);
+    })
+    .catch(err => console.log(err));
+})
 
 // on event firing (all events)
 bot.on("message", data => {
@@ -134,12 +160,6 @@ const processMessage = (userObj, channelObj, data) => {
 
   // WEATHER CODE IS HERE
 
-  const GET_URL = `https://bixby.brellaweatherapp.com/api/v1/assistant?key=${
-    process.env.APIKEY
-  }&lat=40.714272&long=-74.005966&units=us`;
-
-  let weatherReport = "";
-
   fetch(GET_URL)
     .then(res => res.json())
     .then(res => {
@@ -150,10 +170,6 @@ const processMessage = (userObj, channelObj, data) => {
     .catch(err => console.log(err));
 
   // POSTING TO CHANNEL
-  function postInMorning(weatherReport = "Good Morning!") {
-    bot.getUsers()
-      .then(users => {console.log("reached here"); console.log(users);})
-  }
 
   function postToChannel(weatherReport = "Cloudia is broken, sorry!") {
     bot
@@ -175,4 +191,5 @@ const processMessage = (userObj, channelObj, data) => {
       );
     });
   }
+
 };
