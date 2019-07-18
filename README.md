@@ -1,11 +1,14 @@
-Gambly
+Cloudia
 ---
 
-A slackbot that enables gambling with Bonusly :)
+Cloudia: A little reminder for weather it's gonna rain or shine! 🌦 On duty every morning at 7AM EST or via summon @cloudia in any channel (reports back in same channel).
 
 Try it locally
 ---
-Add an `.env` file with `APIKEY` for the slackbot and a `BONUSLY_TOKEN` from the Bonusly API with admin priveleges.
+Add an `.env` file with:
+- `APIKEY` from Dark Sky API
+- `SLACK_TOKEN` from the Slack API's OAuth Access Token 
+- `BOT_TOKEN` from the Slack API's Bot User OAuth Access Token 
 
 Install the [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli)
 
@@ -15,22 +18,22 @@ $ npm i
 $ heroku local
 ```
 
-
 Tech
 ---
 
 - [mishk0/Slack-bot-api](https://github.com/mishk0/slack-bot-api)
-- [Bonusly API](https://bonusly.docs.apiary.io/#)
+- [Dark Sky API](https://darksky.net/dev/docs#overview)
+- [Brella API](https://apps.apple.com/us/app/brella-personal-weather/id1163666072)
 
-> NOTE: need to restart app when adding new Slack users.
-
-
-How to call Gambly in Slack
+How to call Cloudia in Slack
 ---
-Example bet request:
+In any channel, call:
 
-```@gambly @johnny.appleseed +40 If you save plant 40 trees!```
+```@cloudia```
 
-Alternatively, one may write:
+Example response in that same channel:
 
-```@gambly +20 @champagne.papi If you drop an album by the end of this October```
+```H2-Oh no! You might want to bring an umbrella. You should wear your shorts and t-shirt. The forecast is chance of light rain in the afternoon and partly cloudy in the evening, with a high of 82°F and low of 75°F.```
+
+```Is there a lightning storm nearby? Because you look electrifying wearing your shorts and t-shirt. The forecast is cloudy throughout the day, with a high of 82°F and low of 74°F.```
+
