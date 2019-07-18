@@ -16,7 +16,7 @@ if (!process.env.APIKEY) {
 
 // create a bot
 const bot = new SlackBot({
-  token: process.env.TOKEN, // Add a bot https://my.slack.com/services/new/bot and put the token
+  token: process.env.BOT_TOKEN, // Add a bot https://my.slack.com/services/new/bot and put the token
   name: "cloudia"
 });
 
@@ -34,7 +34,7 @@ function postData(url = "", data = {}) {
     headers: {
       "Content-Type": "application/json",
       // 'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: `Bearer ${process.env.SLACKTOKEN}`
+      Authorization: `Bearer ${process.env.SLACK_TOKEN}`
     },
     redirect: "follow", // manual, *follow, error
     referrer: "no-referrer", // no-referrer, *client
