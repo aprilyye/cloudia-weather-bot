@@ -5,40 +5,36 @@ const uuidv1 = require("uuid/v1");
 if (!process.env.APIKEY) {
   console.error("Set APIKEY in .env");
 }
-if (!process.env.BONUSLY_TOKEN) {
-  console.error("Set BONUSLY_TOKEN in .env");
-}
 
 // create a bot
 const bot = new SlackBot({
-  token: process.env.APIKEY, // Add a bot https://my.slack.com/services/new/bot and put the token
+  token: process.env.TOKEN, // Add a bot https://my.slack.com/services/new/bot and put the token
   name: "cloudia"
 });
 
 // found by listing users: bot.getUsers().then(arr => console.log(arr))
-const BOT_ID = "ULGU042K1";
+//bot.getUsers().then(arr => console.log(arr))
+const BOT_ID = "UL6GS3G5Q";
 
-let bonuslyUsers = {};
-
-bot.on("start", () => {
-  // fetch users and add to Map
-  fetch(
-    `https://bonus.ly/api/v1/users?access_token=${
-      process.env.BONUSLY_TOKEN
-    }&show_financial_data=true`
-  )
-    //fetch('https://bonus.ly/api/v1/bonuses?access_token=ebd604cacd64f1296a27fa867a57ec3b')
-    .then(res => res.json())
-    .then(res => {
-      // console.log(users)
-      res.result.forEach(u => {
-        bonuslyUsers[u.email] = u;
-        console.log(u.email);
-      });
-    })
-    // .then(res => console.log(bonuslyUsers))
-    .catch(err => console.log(err));
-});
+// bot.on("start", () => {
+//   // fetch users and add to Map
+//   fetch(
+//     `https://bonus.ly/api/v1/users?access_token=${
+//       process.env.BONUSLY_TOKEN
+//     }&show_financial_data=true`
+//   )
+//     //fetch('https://bonus.ly/api/v1/bonuses?access_token=ebd604cacd64f1296a27fa867a57ec3b')
+//     .then(res => res.json())
+//     .then(res => {
+//       // console.log(users)
+//       res.result.forEach(u => {
+//         bonuslyUsers[u.email] = u;
+//         console.log(u.email);
+//       });
+//     })
+//     // .then(res => console.log(bonuslyUsers))
+//     .catch(err => console.log(err));
+// });
 
 // on event firing (all events)
 bot.on("message", data => {
@@ -74,14 +70,14 @@ bot.on("message", data => {
 const findUser = userID =>
   bot
     .getUsers()
-    .then(obj => obj.members.filter(user => user.id === userID))
+    .then(obj => obj.members.filter(user => user.id == userID))
     .then(arr => arr[0]) // pick 1 (should only be one anyways)
     .catch(err => console.log(err));
 
 const findChannel = channelID =>
   bot
     .getChannels()
-    .then(obj => obj.channels.filter(channel => channel.id === channelID))
+    .then(obj => obj.channels.filter(channel => channel.id == channelID))
     .then(arr => arr[0]) // pick 1 (should only be one anyways)
     .catch(err => console.log(err));
 
@@ -123,7 +119,7 @@ const processMessage = (userObj, channelObj, data) => {
   }
 
   // remove mention text
-  let msg = data.text.replace(/<@ULGU042K1>/g, "").trim();
+  let msg = data.text.replace(/<@UL6GS3G5Q>/g, "").trim();
 
   console.log(`FULL MSG: ${msg}`);
   if (!msg.indexOf("@") === -1) {
@@ -138,18 +134,26 @@ const processMessage = (userObj, channelObj, data) => {
 
   // WEATHER CODE IS HERE
 
-  bot.postMessageToUser(recipientName, "", params, (payload, err) => {
-    if (err) {
-      console.log(err);
-    } else {
-      console.log("payload: " + JSON.stringify(payload));
-    }
+  bot
+    .getChannels()
+    .then(cs => cs.map(c => c.id))
+    .then(console.log);
+  findChannel(data.channel).then(channel => {
+    console.log("CHANNEL ID: ", channel.id);
+    bot.postMessageToChannel(channel.id, "", null, (payload, err) => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log("payload: " + JSON.stringify(payload));
+      }
+    });
   });
 
-  const GET_URL = `https://bixby.brellaweatherapp.com/api/v1/assistant?key=${process.env.KEY}&lat=40.714272&long=-74.005966&units=us`
+  const GET_URL = `https://bixby.brellaweatherapp.com/api/v1/assistant?key=${
+    process.env.APIKEY
+  }&lat=40.714272&long=-74.005966&units=us`;
 
   fetch(GET_URL)
     .then(res => console.log(res))
     .catch(err => console.log(err));
-
-  });
+};
