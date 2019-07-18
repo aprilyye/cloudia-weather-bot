@@ -134,30 +134,40 @@ const processMessage = (userObj, channelObj, data) => {
 
   // WEATHER CODE IS HERE
 
-  bot
-    .getChannels()
-    .then(cs => cs.map(c => c.id))
-    .then(console.log);
-  findChannel(data.channel).then(channel => {
-    bot.postMessageToChannel(
-      "random",
-      "weather is rainy",
-      null,
-      (payload, err) => {
-        if (err) {
-          console.log(err);
-        } else {
-          console.log("payload: " + JSON.stringify(payload));
-        }
-      }
-    );
-  });
-
   const GET_URL = `https://bixby.brellaweatherapp.com/api/v1/assistant?key=${
     process.env.APIKEY
   }&lat=40.714272&long=-74.005966&units=us`;
 
+  let weatherReport = "";
+
   fetch(GET_URL)
-    .then(res => console.log(res))
+    .then(res => res.json())
+    .then(res => {
+      weatherReport = res.sentence;
+      postToChannel(weatherReport);
+    })
     .catch(err => console.log(err));
+
+  // POSTING TO CHANNEL
+  function postToChannel(weatherReport = "Cloudia is broken, sorry!") {
+    bot
+      .getChannels()
+      .then(cs => cs.map(c => c.id))
+      .then(console.log);
+    findChannel(data.channel).then(channel => {
+      bot.postMessageToChannel(
+        "random",
+        weatherReport,
+        null,
+        (payload, err) => {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log("payload: " + JSON.stringify(payload));
+          }
+        }
+      );
+    });
+  }
+
 };
