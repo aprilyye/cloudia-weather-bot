@@ -3,6 +3,8 @@ Cloudia
 
 Cloudia: A little reminder for weather it's gonna rain or shine! 🌦 On duty every morning at 7AM EST or via summon @cloudia in any channel (reports back in same channel).
 
+![Cloudia](cloudia-01.png)
+
 Try it locally
 ---
 Add an `.env` file with:
